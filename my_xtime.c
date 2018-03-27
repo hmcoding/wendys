@@ -3,6 +3,8 @@
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#include <linux/time.h>
+#include <linux/seqlock.h>
 #include <linux/uaccess.h>
 
 MODULE_LICENSE("GPL");
@@ -14,6 +16,7 @@ MODULE_DESCRIPTION("Simple module featuring proc read");
 #define PERMS 0644
 #define PARENT NULL
 static struct file_operations fops;
+
 
 static char *message;
 static int read_p;
@@ -33,6 +36,7 @@ int hello_proc_open(struct inode *sp_inode, struct file *sp_file) {
 }
 
 ssize_t hello_proc_read(struct file *sp_file, char __user *buf, size_t size, loff_t *offset) {	
+
 	struct timespec time;
 	time = current_kernel_time();
 	if (prev_seconds == -1)
@@ -72,6 +76,10 @@ ssize_t hello_proc_read(struct file *sp_file, char __user *buf, size_t size, lof
 	printk("proc called read\n");
 	copy_to_user(buf, message, len);
 	return len;
+
+
+
+
 }
 
 int hello_proc_release(struct inode *sp_inode, struct file *sp_file) {

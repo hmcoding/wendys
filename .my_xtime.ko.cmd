@@ -1,1 +1,0 @@
-cmd_/usr/src/test_kernel/my_xtime/my_xtime.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /usr/src/test_kernel/my_xtime/my_xtime.ko /usr/src/test_kernel/my_xtime/my_xtime.o /usr/src/test_kernel/my_xtime/my_xtime.mod.o ;  true

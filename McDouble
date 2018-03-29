@@ -1,0 +1,86 @@
+%{
+#include <stdio.h>
+#include <stdlib.h> 
+#include <string.h>  
+#include "lex.yy.c"      
+FILE *outfile;            
+int yyline = 1;
+int yycolumn = 1;
+%}
+
+%union{
+	int sv;
+	char *s;
+	struct{
+      int v;
+      char *s;
+	}attr;
+	
+}
+
+%token   <sv> ICONSTnumber
+%token   <attr> IDnumber
+%token	 <sv> VARSTRnumber
+%token   <sv> VARINTnumber
+
+%token PRINTnumber PROGRAMnumber ISnumber BEGINnumber ENDnumber DIVnumber DOTnumber
+%token SEMInumber LPARENnumber MINUSnumber TIMESnumber COMMAnumber RPARENnumber PLUSnumber EQnumber STRINGnumber 
+
+%type <attr> exp
+%type <attr> term
+%type <attr> factor
+
+%%
+program: PROGRAMnumber IDnumber ISnumber compstate   
+         ;
+
+begin_number:
+    BEGINnumber { print_header(); }     
+
+compstate: begin_number statement ENDnumber{print_end();}
+           | begin_number statement SEMInumber statement ENDnumber{print_end();}
+           ;
+
+statement: IDnumber EQnumber exp
+           | PRINTnumber exp
+		   | declaration
+           ;
+
+declaration: VARnumber IDnumber
+             | VARnumber IDnumber COMMAnumber IDnumber
+             ;
+
+exp: term {$$.v = $1.v; strcpy($$.s, $1.s);}
+     | exp PLUSnumber term {$$.v = $1.v + $3.v; sprintf($$.s, "(%s) + (%s)", $1. s, $3.s);}
+     | exp MINUSnumber term {$$.v = $1.v - $3.v; sprintf($$.s, "(%s) - (%s)", $1. s, $3.s);}
+     ;
+
+term: factor {$$.v = $1.v; strcpy($$.s, $1.s);}
+      | term TIMESnumber factor {$$.v = $1.v * $3.v; sprintf($$.s, "(%s) * (%s)", $1.s, $3.s);}
+      | term DIVnumber factor {$$.v = $1.v / $3.v; sprintf($$.s, "(%s) / (%s)", $1.s, $3.s);}
+      ;
+
+ factor: ICONSTnumber {$$.v = $1; sprintf($$.s, "%d", $1);}
+         | IDnumber {$$.v = $1.v; strcpy($$.s,  $1.s);}
+         | LPARENnumber exp RPARENnumber {$$.v = $2.v; strcpy($$.s,  $2.s);}
+		 ;
+%%
+
+
+int main()
+{
+  if(!yyparse())
+    {
+      printf("accept\n");
+    }
+  else
+    printf("reject\n");
+}
+
+void print_header() {}
+void print_end(){}
+
+void yyerror(const char *str)
+{
+  printf("yyerror: %s at line %d\n", str, yyline);
+}

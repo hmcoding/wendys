@@ -9,7 +9,7 @@ Version of Linux:
 
 
 How to compile:
-Compile with the makefile by simply typing make.
+Compile with the makefile for the given part by simply typing make.
 
 
 Known bugs:

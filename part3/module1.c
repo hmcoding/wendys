@@ -243,7 +243,7 @@ void initialize_elevator() {
 	mutex_unlock(&shared_data_mutex);
 
 	mutex_lock_interruptible(&elev_mutex);
-	elev->current_floor = 0;
+	elev->current_floor = 1;
 	elev->next_floor = -1;
 	elev->passengers = 0;
 	elev->weight = 0;

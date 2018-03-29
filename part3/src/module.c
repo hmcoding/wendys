@@ -12,7 +12,7 @@
 #define UP 1 
 #define DOWN 2
 #define LOADING 3
-#define STOPPED 4
+#define OFFLINE 4
 
 #define NUM_FLOORS 10
 

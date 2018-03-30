@@ -9,7 +9,7 @@ Version of Linux:
 
 
 How to compile:
-Part 1 is compiled using the command $ gcc -o part1.x part1.c then the command $ strace -o log ./part1.x.
+Part 1 is compiled using make then the command $ strace -o log ./part1.x.
 For my_xtime and part3, compile with the makefile for the given part by simply typing make inside of each directory (my_xtime or part3) to run each individually. Each directory contains its own Makefile for that specific part of the assignment. 
 
 

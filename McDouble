@@ -1,8 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h> 
-#include <string.h>  
-#include "lex.yy.c"      
+#include <string.h>       
 FILE *outfile;            
 int yyline = 1;
 int yycolumn = 1;

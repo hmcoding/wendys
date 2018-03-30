@@ -13,32 +13,29 @@
 #define DOWN 2
 #define LOADING 3
 #define OFFLINE 4
-
 #define NUM_FLOORS 10
 
-// elevator globals
 
-int current_direction;
-int scan_direction;
-int should_stop;
-int current_floor;
-int next_floor;
-int current_passengers;
-int current_weight;
-int waiting_passengers;
-int passengers_serviced;
-int passengers_serviced_by_floor[NUM_FLOORS];
 
-// execution thread
-struct task_struct* elevator_thread;
-struct mutex mutex_passenger_queue;
-struct mutex mutex_elevator_list;
+int nowDirection;
+int findDirection;
+int shouldOffline;
+int nowFloor;
+int nextFloor;
+int nowPass;
+int nowWeight;
+int waitPass;
+int loadedPass;
+int loadedPassFloor[NUM_FLOORS];
 
-// utility functions
-char* PrintDirection(int dir);
+
+struct task_struct* eThread;
+struct mutex mutex_pQueue;
+struct mutex mutex_eList;
+
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Gregulak");
+MODULE_AUTHOR("Culver Perry Davis");
 MODULE_DESCRIPTION("Elevator Scheduling");
 
 #define ENTRY_NAME "elevator"
@@ -51,12 +48,12 @@ static int read_p;
 
 
 int hello_proc_open(struct inode *sp_inode, struct file *sp_file) {
-	printk("proc called open\n");
+	printk(KERN_INFO "proc called open\n");
 	
 	read_p = 1;
 	message = kmalloc(sizeof(char) * 2048, __GFP_RECLAIM | __GFP_IO | __GFP_FS);
 	if (message == NULL) {
-		printk("ERROR, hello_proc_open");
+		printk(KERN_WARNING "hello_proc_open");
 		return -ENOMEM;
 	}
 	
@@ -64,74 +61,72 @@ int hello_proc_open(struct inode *sp_inode, struct file *sp_file) {
 }
 
 ssize_t hello_proc_read(struct file *sp_file, char __user *buf, size_t size, loff_t *offset) {	
-	int odd;	
+	
 	int len;
-	current_passengers = ElevatorListSize();
-	current_weight = ElevatorWeight(); 
+	nowPass = sizeElevList();
+	nowWeight = getElevWeight(); 
 
-	odd = current_weight % 2;
-	if (odd)
-	{
-	sprintf(message, "The Elevator's Current Movement State Is: %s\nThe Current Floor Is: %d\nThe Next Floor Is: %d\nThe Elevator's current Load Is: %d Passenger Units, %d.5 Weight Units \nNumber of passengers serviced: %d\nPassengersWaiting:\n%s", PrintDirection(current_direction), current_floor, next_floor, current_passengers, current_weight/2, passengers_serviced, PrintQueueToString());
-	}
-	else
-	{
-	sprintf(message, "The Elevator's Current Movement State Is: %s\nThe Current Floor Is: %d\nThe Next Floor Is: %d\nThe Elevator's current Load Is: %d Passenger Units, %d Weight Units \nNumber of passengers serviced: %d\nPassengersWaiting:\n%s", PrintDirection(current_direction), current_floor, next_floor, current_passengers, current_weight/2, passengers_serviced, PrintQueueToString());
-	}
 	read_p = !read_p;
 	if (read_p) {
 		return 0;
 	}
 	len = strlen(message);
-	printk("proc called read\n");
+	printk(KERN_INFO "proc called read\n");
 	copy_to_user(buf, message, len);
 	return len;
 }
 
 int hello_proc_release(struct inode *sp_inode, struct file *sp_file) {
-	printk("proc called release\n");
+	printk(KERN_NOTICE "proc called release\n");
 	kfree(message);	
 	return 0;
 }
 
 static int hello_init(void) {
 	int i;
-	printk("Inserting Elevator\n"); 
-	printk("/proc/%s create\n", ENTRY_NAME); 
+	printk(KERN_NOTICE "/proc/%s create\n",ENTRY_NAME);
 	fops.open = hello_proc_open;
 	fops.read = hello_proc_read;
 	fops.release = hello_proc_release;
 
-	// initialize elevator globals
-	current_direction = STOPPED;
-	scan_direction = UP;
-	should_stop = 0;
-	current_floor = 1;
-	next_floor = 1;
-	current_passengers = 0;
-	current_weight = 0;
-	waiting_passengers = 0;
-	passengers_serviced = 0;
-	for (i = 0; i < NUM_FLOORS; i++)
-		passengers_serviced_by_floor[i] = 0;
-	InitializeQueue();
+	
+	nowDirection = OFFLINE;
+	findDirection = UP;
+	shouldOffline = 0;
+	nowFloor = 1;
+	nextFloor = 1;
+	nowPass = 0;
+	nowWeight = 0;
+	waitPass = 0;
+	loadedPass = 0;
+	
+	
+	
+	i = 0;
+	while(i < NUM_FLOORS)
+	{
+		loadedPassFloor[i] = 0;
+		i++;
+	}
+	
+	qInitial();
 
 	elevator_syscalls_create();
 	
-	// setup mutex
-	mutex_init(&mutex_passenger_queue);
-	mutex_init(&mutex_elevator_list);	
 
-	// start the elevator thread
-	elevator_thread = kthread_run(ElevatorRun, NULL, "Elevator Thread");
-	if (IS_ERR(elevator_thread))
+	mutex_init(&mutex_pQueue);
+	mutex_init(&mutex_eList);	
+
+	
+	eThread = kthread_run(elevGo, NULL, "Elevator Thread");
+	if (IS_ERR(eThread))
 	{
-		printk("Error! kthread_run, elevator thread\n");
-		return PTR_ERR(elevator_thread);
+		
+		return PTR_ERR(eThread);
 	}	
 	
 	if (!proc_create(ENTRY_NAME, PERMS, NULL, &fops)) {
-		printk("ERROR! proc_create\n");
+		printk(KERN_WARNING "proc create\n");
 		remove_proc_entry(ENTRY_NAME, NULL);
 		return -ENOMEM;
 	}
@@ -141,33 +136,17 @@ static int hello_init(void) {
 static void hello_exit(void) {
 	int ret;
 	remove_proc_entry(ENTRY_NAME, NULL);
-	printk("Removing elevator\n");
+	
 	elevator_syscalls_remove();
-	CleanupQueue();	
-	printk("Removing /proc/%s.\n", ENTRY_NAME);
-	ret = kthread_stop(elevator_thread);
-	if (ret != -EINTR)
-		printk("Elevator thread has stopped.\n");
+	qClean();	
+	printk(KERN_NOTICE "Removing /proc/%s.\n", ENTRY_NAME);
+	ret = kthread_stop(eThread);
+
 }
 
 module_init(hello_init);
 module_exit(hello_exit);
 
-// utility functions
-char* PrintDirection(int dir)
-{
-	static char buff[32];
-	if (dir == IDLE)
-		sprintf(buff, "IDLE");
-	else if (dir == UP)
-		sprintf(buff, "UP");
-	else if (dir == DOWN)
-		sprintf(buff, "DOWN");
-	else if (dir == LOADING)
-		sprintf(buff, "LOADING");
-	else if (dir == STOPPED)
-		sprintf(buff, "STOPPED");
-	else
-		sprintf(buff, "BAD_ARG_PRINT_DIR");
-	return buff;
-}
+
+
+

@@ -3,6 +3,8 @@ Holly Culver
 Abigail Perry
 Hunter Davis
 
+Division of Labor:
+We took on every part of this project as a team.
 
 Version of Linux:
 4.14.12

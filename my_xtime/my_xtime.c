@@ -61,35 +61,7 @@ ssize_t hello_proc_read(struct file *sp_file, char __user *buf, size_t size, lof
 	}
 	
 	
-	
-	
-	/*
-	if (lastSec == -1)
-	{
-		sprintf(message, "current time: %d.%d\n", time.tv_sec, time.tv_nsec);
-	}	
-	else
-	{
-		int elapsedSec;
-		int elapsedNSec;
-		// need to borrow
-		if (lastNSec > time.tv_nsec)
-		{
-			elapsedSec = time.tv_sec - lastSec - 1;
-			elapsedNSec = time.tv_nsec + 1000000000 - lastNSec;
-		}
-		else
-		{
-			elapsedSec = time.tv_sec - lastSec;
-			elapsedNSec = time.tv_nsec - lastNSec;
-		}
-		sprintf(message, "current time: %d.%d\nelapsed time: %d.%d\n", 
-			time.tv_sec, time.tv_nsec, 
-			elapsedSec, elapsedNSec);
-	}
-	*/
-	
-	// store current time as old time
+
 	lastSec = time.tv_sec;
 	lastNSec = time.tv_nsec;
 

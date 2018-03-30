@@ -21,10 +21,10 @@ Known bugs:
 Contents of TAR:
 Along with the Readme the tar file contains our directories for part1, my_xtime, and part3. Each of these directories contains their specific Makefile, along with all necessary source code to run each of these. Our alloted syscalls.h files will be within the seen include directory in part3. 
 
-Part 1 includes a makefile, and part1.c
-my_xtime includes its makefile and my_xtime.c.
-Part 3 includes a src directory with: module.c, sys_issue_request.c, sys_start_elevator.c, sys_stop_elevator.c, syscalls.c
-and an include directory with: syscalls.h and a Makefile in the ~/ of part3. 
+-Part 1 includes a makefile, and part1.c
+-my_xtime includes its makefile and my_xtime.c.
+-Part 3 includes a src directory with: module.c, sys_issue_request.c, sys_start_elevator.c, sys_stop_elevator.c, syscalls.c
+and an include directory with: syscalls.h and a Makefile in the ~/ of part3.
 Makefile, syscalls.h, and syscall_64.tbl are the core kernel files that were modified for adding system calls for part 3.
 
 

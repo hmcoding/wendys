@@ -1,0 +1,126 @@
+%{
+#include <stdio.h>
+#include <stdlib.h> 
+#include <string.h>      
+FILE *outfile;            
+int yyline = 1;
+int yycolumn = 1;
+%}
+
+%union{
+	int sv;
+	char *s;
+	struct{
+      int value;
+      char *name;
+	  int tag;
+	  int type;
+	}attr;
+	struct table[2000]; 
+}
+%type <attr> table
+
+%token   <sv> ICONSTnumber
+%token   <attr> IDnumber
+%token	 <s> VARSTRnumber
+%token <sv> VARINTnumber
+
+%token PRINTnumber PROGRAMnumber ISnumber ENDnumber DIVnumber DOTnumber BEGINnumber
+%token SEMInumber LPARENnumber MINUSnumber TIMESnumber COMMAnumber RPARENnumber PLUSnumber EQnumber STRINGnumber 
+
+/*
+%type <attr> exp
+%type <attr> term
+%type <attr> factor
+*/
+
+%%
+program: PROGRAMnumber IDnumber ISnumber compstate  
+         ;
+
+compstate: BEGINnumber statement SEMInumber ENDnumber{print_end();}
+           | BEGINnumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+		   | BEGINnumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber statement SEMInumber ENDnumber{print_end();}
+           ;
+
+statement: IDnumber EQnumber ICONSTnumber      /* exp */
+		   | IDnumber EQnumber here
+		   | PRINTnumber STRINGnumber DOTnumber ICONSTnumber DOTnumber STRINGnumber DOTnumber IDnumber  /* test 1 case */
+		   | PRINTnumber STRINGnumber DOTnumber IDnumber DOTnumber STRINGnumber DOTnumber IDnumber
+		   | PRINTnumber STRINGnumber DOTnumber IDnumber DOTnumber STRINGnumber DOTnumber IDnumber DOTnumber STRINGnumber DOTnumber IDnumber  /* test 2 case */
+		   | PRINTnumber STRINGnumber DOTnumber ICONSTnumber DOTnumber STRINGnumber DOTnumber ICONSTnumber DOTnumber STRINGnumber DOTnumber IDnumber  
+		   | PRINTnumber STRINGnumber DOTnumber ICONSTnumber DOTnumber STRINGnumber DOTnumber ICONSTnumber DOTnumber STRINGnumber DOTnumber ICONSTnumber DOTnumber STRINGnumber DOTnumber IDnumber   /* extra case work on later */
+           | PRINTnumber STRINGnumber    
+		   | VARINTnumber IDnumber
+		   | declaration
+		   | PRINTnumber IDnumber    
+		   | IDnumber EQnumber ICONSTnumber DIVnumber ICONSTnumber PLUSnumber ICONSTnumber MINUSnumber ICONSTnumber PLUSnumber LPARENnumber ICONSTnumber DIVnumber LPARENnumber ICONSTnumber DIVnumber ICONSTnumber RPARENnumber RPARENnumber PLUSnumber ICONSTnumber
+		   | PRINTnumber LPARENnumber LPARENnumber IDnumber DIVnumber IDnumber RPARENnumber RPARENnumber TIMESnumber ICONSTnumber PLUSnumber ICONSTnumber PLUSnumber LPARENnumber ICONSTnumber DIVnumber ICONSTnumber RPARENnumber
+		   | PRINTnumber ICONSTnumber            /* these three were for test4 */
+		   | PRINTnumber ICONSTnumber PLUSnumber ICONSTnumber PLUSnumber IDnumber   /*test 5 case */
+		   | PRINTnumber ICONSTnumber PLUSnumber IDnumber   /*test 6 case */
+		   | PRINTnumber ICONSTnumber DIVnumber IDnumber
+		   | PRINTnumber ICONSTnumber TIMESnumber IDnumber
+		   | PRINTnumber ICONSTnumber MINUSnumber IDnumber
+		   | PRINTnumber ICONSTnumber TIMESnumber ICONSTnumber  /* test 7 case */
+		   | PRINTnumber ICONSTnumber DIVnumber ICONSTnumber
+		   | PRINTnumber ICONSTnumber PLUSnumber ICONSTnumber
+		   | PRINTnumber ICONSTnumber MINUSnumber ICONSTnumber 
+		   | PRINTnumber LPARENnumber LPARENnumber IDnumber DIVnumber IDnumber RPARENnumber RPARENnumber TIMESnumber ICONSTnumber PLUSnumber IDnumber PLUSnumber LPARENnumber ICONSTnumber DIVnumber ICONSTnumber RPARENnumber  /* test 8 case */
+           ;
+
+declaration: VARSTRnumber IDnumber
+			 | there
+             | VARINTnumber IDnumber COMMAnumber IDnumber
+			 | VARINTnumber IDnumber COMMAnumber IDnumber COMMAnumber IDnumber
+             ;
+
+here: IDnumber PLUSnumber IDnumber
+      | IDnumber MINUSnumber IDnumber
+	  | IDnumber TIMESnumber IDnumber
+	  ;
+
+there: IDnumber EQnumber STRINGnumber
+	   ;
+/*
+exp: term {$$.v = $1.v; strcpy($$.s, $1.s);}
+     | exp PLUSnumber term {$$.v = $1.v + $3.v; sprintf($$.s, "(%s) + (%s)", $1. s, $3.s);}
+     | exp MINUSnumber term {$$.v = $1.v - $3.v; sprintf($$.s, "(%s) - (%s)", $1. s, $3.s);}
+     ;
+
+term: factor {$$.v = $1.v; strcpy($$.s, $1.s);}
+      | term TIMESnumber factor {$$.v = $1.v * $3.v; sprintf($$.s, "(%s) * (%s)", $1.s, $3.s);}
+      | term DIVnumber factor {$$.v = $1.v / $3.v; sprintf($$.s, "(%s) / (%s)", $1.s, $3.s);}
+      ;
+
+ factor: ICONSTnumber {$$.v = $1; sprintf($$.s, "%d", $1);}
+         | IDnumber {$$.v = $1.v; strcpy($$.s,  $1.s);}
+         | LPARENnumber exp RPARENnumber {$$.v = $2.v; strcpy($$.s,  $2.s);}
+		 ; 
+*/
+%%
+
+
+int main()
+{
+  if(!yyparse())
+    {
+      printf("accept\n");
+    }
+  else
+    printf("reject\n");
+}
+
+void print_end(){}
+
+void yyerror(const char *str)
+{
+  printf("yyerror: %s at line %d\n", str, yyline);
+}
